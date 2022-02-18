@@ -807,6 +807,9 @@ class XMLWrapper
         // initialize results array to empty arrays for both regular in/out params and return params
         $callResults = array('io_param'=>array(), 'retvals'=>array());
         
+        // removes invalid characters from result xml
+        $xml = $this->stripInvalidXml($xml);
+
         $xmlobj = simplexml_load_string($xml);
         
         // note: outer, ignored node name will be <script> (if successful call)
@@ -1156,5 +1159,42 @@ class XMLWrapper
     public function getLastJoblog()
     {
         return $this->joblog;
+    }
+
+    /**
+     * Removes invalid XML Characters
+     * See: https://stackoverflow.com/questions/3466035/how-to-skip-invalid-characters-in-xml-file-using-php
+     * 
+     * @access protected
+     * @param string $value
+     * @return string
+     */
+    protected function stripInvalidXml($value)
+    {
+        $ret = "";
+        if (empty($value)) 
+        {
+            return $ret;
+        }
+    
+        $length = strlen($value);
+        for ($i=0; $i < $length; $i++)
+        {
+            $current = ord($value[$i]);
+            if (($current == 0x9) ||
+                ($current == 0xA) ||
+                ($current == 0xD) ||
+                (($current >= 0x20) && ($current <= 0xD7FF)) ||
+                (($current >= 0xE000) && ($current <= 0xFFFD)) ||
+                (($current >= 0x10000) && ($current <= 0x10FFFF)))
+            {
+                $ret .= chr($current);
+            }
+            else
+            {
+                $ret .= " ";
+            }
+        }
+        return $ret;
     }
 }
